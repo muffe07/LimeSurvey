@@ -59,6 +59,23 @@ class PermissionManager
     public function getPermissionData($userId = null)
     {
         $aObjectPermissions = $this->model::getPermissionData(); // Usage of static, db not needed
+
+        $oEvent = $this->getNewEvent('permissionDataLoad');
+        $oEvent->set('sEntityName', $this->model::class);
+
+        $result = $this->app->getPluginManager()->dispatchEvent($oEvent);
+
+        $aPluginPermissions = $result->get('aPermissions') ?? [];
+
+        //required values
+        foreach ($aPluginPermissions as $permissionName => $aPermission) {
+            $aPluginPermissions[$permissionName]['title'] = $aPermission['title'] ?? null;
+            $aPluginPermissions[$permissionName]['description'] = $aPermission['description'] ?? null;
+            $aPluginPermissions[$permissionName]['img'] = $aPermission['img'] ?? null;
+        }
+
+        $aObjectPermissions = $aObjectPermissions + $aPluginPermissions;
+
         if (empty($aObjectPermissions)) {
             return $aObjectPermissions;
         }
